@@ -4,59 +4,86 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
 NavigationToolbar2Tk)
 import time
+import pandas as pd
+from tkinter import filedialog
+import snap7
 
+    
 def set_pid():
     return
 
-def set_IP():
+def set_IP(): #Función para establecer conexión con el PLC
+    plc = snap7.client.Client()
+    plc.connect(str(IP.get()), 0, 1)
+    try: 
+        plc.get_connected()
+        Estado=ttk.Label(tab0,text="Conectado a: "+str(IP.get()))
+        Estado.grid(column = 1,
+        row = 1,
+        padx = 30,
+        pady = 30)
+    except Exception as err:
+        Estado=ttk.Label(tab0,text=err)
+        Estado.grid(column = 1,
+        row = 1,
+        padx = 30,
+        pady = 30)
     return
 
-#Función para realizar adquisición de datos
-def log():
-    cont=0
-    lvalues=[]
-    lcont=[]
-    while cont<=10:
-        data=time.ctime()
-        lvalues.append(data)
-        lcont.append(cont)
-        print(data)
-        print(cont)
-        time.sleep(1)
-        cont=cont+1
-    return(lvalues)
-        
-        
-def plot():
 
-	# the figure that will contain the plot
-	fig = Figure(figsize = (5, 5),
+#Función para realizar adquisición de datos
+def plot():
+    cont=0
+    ltiempos=[]
+    ldatos=[]
+
+    while cont<=10:
+        tiempo=time.ctime() #Tiempo en que se toma la medición
+        ldatos.append(cont) #Datos adquiridos
+        ltiempos.append(tiempo)
+        print(cont)
+        print(tiempo)
+        time.sleep(1) #Tiemo de espera en segundos
+        cont=cont+1
+
+	#Figura que contiene la gráfica
+    fig = Figure(figsize = (5, 5),
 				dpi = 100)
     
-	# list of squares
-	y = log()
-	# adding the subplot
-	plot1 = fig.add_subplot(111)
+    
+    plot1 = fig.add_subplot(111)
 
 	# plotting the graph
-	plot1.plot(y)
+    plot1.plot(ldatos,ltiempos)
 
-	# creating the Tkinter canvas
-	# containing the Matplotlib figure
-	canvas = FigureCanvasTkAgg(fig,
+	#Canvas que contiene la figura
+    canvas = FigureCanvasTkAgg(fig,
 							master = tab3)
-	canvas.draw()
+    canvas.draw()
 
-	# placing the canvas on the Tkinter window
-	canvas.get_tk_widget().pack()
+	#Ubicación de la figura en el canvas
+    canvas.get_tk_widget().pack()
 
-	# creating the Matplotlib toolbar
-	toolbar = NavigationToolbar2Tk(canvas,
+	#Barra de herramientas del gráfico
+    toolbar = NavigationToolbar2Tk(canvas,
 								tab3)
-	toolbar.update()
+    toolbar.update()
 
-	# placing the toolbar on the Tkinter window
-	canvas.get_tk_widget().pack()
+	#Ubicación de la barra de herramientas
+    canvas.get_tk_widget().pack()
+
+     
+    #Diccionario de listas
+    dict1 = {'Datos': ldatos, 'Tiempo': ltiempos}  
+       
+    df = pd.DataFrame(dict1) 
+    
+    #Guardado del archivo de datos 
+    df.to_csv('Datos_PLC.csv')
+    
+    root.filename =  filedialog.asksaveasfilename(initialdir = "/",title = 'Seleccione la ubicación de destino',filetypes = (("CSV","csv"),("excel","xlsx"),("all files","*.*")))
+    df.to_csv(root.filename+'.csv',index=False)
+    
 
 
 root = tk.Tk()
@@ -88,8 +115,15 @@ row = 0,
 padx = 30,
 pady = 30)
 
-IP=ttk.Entry(tab0).grid(column = 1,
+IP=ttk.Entry(tab0)
+IP.grid(column = 1,
 row = 0,
+padx = 30,
+pady = 30)
+
+Estado=ttk.Label(tab0,text="Desconectado")
+Estado.grid(column = 1,
+row = 1,
 padx = 30,
 pady = 30)
 
