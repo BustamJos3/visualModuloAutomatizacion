@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import tkinter as tk					
 from tkinter import ttk
 from matplotlib.figure import Figure
@@ -6,25 +7,25 @@ NavigationToolbar2Tk)
 import time
 import pandas as pd
 from tkinter import filedialog
-import snap7
-
     
+
+plc=plcComm() #communications with plc instance
+
+        
 def set_pid():
     return
 
 def set_IP(): #Función para establecer conexión con el PLC
-    global plc
-    plc = snap7.client.Client()
-    plc.connect(str(IP.get()), 0, 1)
+    
     try: 
-        plc.get_connected()
+        plc.connection(ip_direction=str(IP.get()))
         Estado=ttk.Label(tab0,text="Conectado a: "+str(IP.get()))
         Estado.grid(column = 1,
         row = 1,
         padx = 30,
         pady = 30)
     except Exception as err:
-        Estado=ttk.Label(tab0,text=err)
+        Estado=ttk.Label(tab0,text=str(err))
         Estado.grid(column = 1,
         row = 1,
         padx = 30,
@@ -39,8 +40,11 @@ def plot():
     ldatos=[]
 
     while cont<=10:
-        db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tamaño)
-        data = snap7.util.get_real(db, 0)
+        
+        # db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tamaño)
+        # data = snap7.util.get_real(db, 0)
+        data=plc.read_from_db()   #Lectura de datos del PLC
+        #data=cont
         tiempo=time.ctime() #Tiempo en que se toma la medición
         ldatos.append(data) #Datos adquiridos
         ltiempos.append(tiempo)
@@ -137,12 +141,42 @@ pady = 30)
 
 #Elementos de la pestaña 1
 ttk.Label(tab1,text="Nivel Tanque 1: ").grid(column = 0,
-row = 0,
+row = 1,
 padx = 30,
 pady = 30)
 
 ttk.Label(tab1,text="Nivel Tanque 2: ").grid(column = 0,
+row = 0,
+padx = 30,
+pady = 30)
+
+Tank2 = ttk.Progressbar(tab1,orient=tk.VERTICAL, length=100,mode="determinate")
+Tank2.grid(column = 1,
+row = 0,
+padx = 30,
+pady = 30)
+
+Tank1 = ttk.Progressbar(tab1,orient=tk.VERTICAL, length=100,mode="determinate")
+Tank1.grid(column = 1,
 row = 1,
+padx = 30,
+pady = 30)
+
+def upBar():
+    Tank1['value']+=10
+    Tank2['value']+=10
+
+def dBar():
+    Tank1['value']-=10
+    Tank2['value']-=10
+
+ttk.Button(tab1,text='Subir', command=upBar).grid(column = 2,
+row = 0,
+padx = 30,
+pady = 30)
+
+ttk.Button(tab1,text='Bajar', command=dBar).grid(column = 3,
+row = 0,
 padx = 30,
 pady = 30)
 
