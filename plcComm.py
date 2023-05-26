@@ -22,7 +22,7 @@ class plcComm:
         try:
             result = plc.db_read(dbNumber, startByte, byteSize)
             lecture=snap7.util.get_real(result,startByte)
-            return lecture
+            return result,lecture #get raw data and value on readable format
         except Exception as err:
             print("Lectura no ejecutada")
             print(err)
@@ -31,9 +31,8 @@ class plcComm:
         plc=self.connection()
         dbNumber=1
         startByte=0 #byte from which to start reading
-        byteSize=4 #size of value to be read
         try:
-            result = plc.db_read(dbNumber,startByte,byteSize) #read value to change it
+            result = self.read_from_db()[0] #read value to change it
             snap7.util.set_real(result,startByte,newValue)
             plc.db_write(dbNumber,startByte,result)
             print("Escritura ejecutada")
@@ -41,5 +40,17 @@ class plcComm:
             print("Escritura no ejecutada")
             print(err)
 
-    def plotting_level(self):
-        pass
+    '''
+    def plotting_level(self,flag=True):
+        if flag==True:
+            plc=self.connection()
+            try:
+                fig,ax=plt.subplots(11) #create plot object
+                ax.plot()
+            except Exception as err:
+                print("Graficación no realizada")
+                print(err)
+        else:
+            print("Graficación terminada")
+    #unused for now
+    '''
