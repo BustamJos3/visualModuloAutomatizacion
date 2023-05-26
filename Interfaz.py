@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import tkinter as tk					
 from tkinter import ttk
 from matplotlib.figure import Figure
@@ -6,42 +7,44 @@ NavigationToolbar2Tk)
 import time
 import pandas as pd
 from tkinter import filedialog
-import snap7
+import plcComm as pc
 
-    
+plc=pc.plcComm() #communications with plc instance
+
+        
 def set_pid():
     return
 
-def set_IP(): #Funci贸n para establecer conexi贸n con el PLC
-    global plc
-    plc = snap7.client.Client()
-    plc.connect(str(IP.get()), 0, 1)
+def set_IP(): #Funci髇 para establecer conexi髇 con el PLC
+    
     try: 
-        plc.get_connected()
+        plc.connection(ip_direction=str(IP.get()))
         Estado=ttk.Label(tab0,text="Conectado a: "+str(IP.get()))
         Estado.grid(column = 1,
         row = 1,
         padx = 30,
         pady = 30)
     except Exception as err:
-        Estado=ttk.Label(tab0,text=err)
+        Estado=ttk.Label(tab0,text=str(err))
         Estado.grid(column = 1,
         row = 1,
         padx = 30,
         pady = 30)
     return
 
-
-#Funci贸n para realizar adquisici贸n de datos
+#Funci髇 para realizar adquisici髇 de datos
 def plot():
     cont=0
     ltiempos=[]
     ldatos=[]
 
     while cont<=10:
-        db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tama帽o)
-        data = snap7.util.get_real(db, 0)
-        tiempo=time.ctime() #Tiempo en que se toma la medici贸n
+        
+        # db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tama駉)
+        # data = snap7.util.get_real(db, 0)
+        data=plc.read_from_db()   #Lectura de datos del PLC
+        #data=cont
+        tiempo=time.ctime() #Tiempo en que se toma la medici髇
         ldatos.append(data) #Datos adquiridos
         ltiempos.append(tiempo)
         print(data)
@@ -49,7 +52,7 @@ def plot():
         time.sleep(1) #Tiemo de espera en segundos
         cont=cont+1
 
-	#Figura que contiene la gr谩fica
+	#Figura que contiene la gr醘ica
     fig = Figure(figsize = (5, 5),
 				dpi = 100)
     
@@ -64,15 +67,15 @@ def plot():
 							master = tab3)
     canvas.draw()
 
-	#Ubicaci贸n de la figura en el canvas
+	#Ubicaci髇 de la figura en el canvas
     canvas.get_tk_widget().pack()
 
-	#Barra de herramientas del gr谩fico
+	#Barra de herramientas del gr醘ico
     toolbar = NavigationToolbar2Tk(canvas,
 								tab3)
     toolbar.update()
 
-	#Ubicaci贸n de la barra de herramientas
+	#Ubicaci髇 de la barra de herramientas
     canvas.get_tk_widget().pack()
 
      
@@ -84,20 +87,20 @@ def plot():
     #Guardado del archivo de datos 
     df.to_csv('Datos_PLC.csv')
     
-    root.filename =  filedialog.asksaveasfilename(initialdir = "/",title = 'Seleccione la ubicaci贸n de destino',filetypes = (("CSV","csv"),("excel","xlsx"),("all files","*.*")))
+    root.filename =  filedialog.asksaveasfilename(initialdir = "/",title = 'Seleccione la ubicaci髇 de destino',filetypes = (("CSV","csv"),("excel","xlsx"),("all files","*.*")))
     df.to_csv(root.filename+'.csv',index=False)
     
 
 
 root = tk.Tk()
-root.title("SCADA Banco de instrumentaci贸n")
+root.title("SCADA Banco de instrumentaci髇")
 tabControl = ttk.Notebook(root)
 tabControl.config(width=400, height=300)
 
 s = ttk.Style()
 s.theme_use('default')
-s.configure('TNotebook.Tab', background="light blue") #Color de las pesta帽as
-s.configure('TNotebook', background="dark grey") #Color del fondo de las pesta帽as
+s.configure('TNotebook.Tab', background="light blue") #Color de las pesta馻s
+s.configure('TNotebook', background="dark grey") #Color del fondo de las pesta馻s
 s.configure('TFrame', background="light grey")   #Color de fondo del cuadro
 
 
@@ -106,14 +109,14 @@ tab1 = ttk.Frame(tabControl)
 tab2 = ttk.Frame(tabControl)
 tab3 = ttk.Frame(tabControl)
 
-tabControl.add(tab0, text ='Conexi贸n')
-tabControl.add(tab1, text ='Visualizaci贸n')
+tabControl.add(tab0, text ='Conexi髇')
+tabControl.add(tab1, text ='Visualizaci髇')
 tabControl.add(tab2, text ='Control PID')
-tabControl.add(tab3, text ='Adquisici贸n')
+tabControl.add(tab3, text ='Adquisici髇')
 tabControl.pack(expand = 1, fill ="both")
 
-#Elementos de la pesta帽a 0
-ttk.Label(tab0,text="Direcci贸n IP: ").grid(column = 0,
+#Elementos de la pesta馻 0
+ttk.Label(tab0,text="Direcci髇 IP: ").grid(column = 0,
 row = 0,
 padx = 30,
 pady = 30)
@@ -130,23 +133,53 @@ row = 1,
 padx = 30,
 pady = 30)
 
-ttk.Button(tab0,text='Establecer conexi贸n', command=set_IP).grid(column = 0,
+ttk.Button(tab0,text='Establecer conexi髇', command=set_IP).grid(column = 0,
 row = 3,
 padx = 30,
 pady = 30)
 
-#Elementos de la pesta帽a 1
+#Elementos de la pesta馻 1
 ttk.Label(tab1,text="Nivel Tanque 1: ").grid(column = 0,
-row = 0,
-padx = 30,
-pady = 30)
-
-ttk.Label(tab1,text="Nivel Tanque 2: ").grid(column = 0,
 row = 1,
 padx = 30,
 pady = 30)
 
-#Elementos de la pesta帽a 2
+ttk.Label(tab1,text="Nivel Tanque 2: ").grid(column = 0,
+row = 0,
+padx = 30,
+pady = 30)
+
+Tank2 = ttk.Progressbar(tab1,orient=tk.VERTICAL, length=100,mode="determinate")
+Tank2.grid(column = 1,
+row = 0,
+padx = 30,
+pady = 30)
+
+Tank1 = ttk.Progressbar(tab1,orient=tk.VERTICAL, length=100,mode="determinate")
+Tank1.grid(column = 1,
+row = 1,
+padx = 30,
+pady = 30)
+
+def upBar():
+    Tank1['value']+=10
+    Tank2['value']+=10
+
+def dBar():
+    Tank1['value']-=10
+    Tank2['value']-=10
+
+ttk.Button(tab1,text='Subir', command=upBar).grid(column = 2,
+row = 0,
+padx = 30,
+pady = 30)
+
+ttk.Button(tab1,text='Bajar', command=dBar).grid(column = 3,
+row = 0,
+padx = 30,
+pady = 30)
+
+#Elementos de la pesta馻 2
 ttk.Label(tab2,text="kp: ").grid(column = 0,
 row = 0,
 padx = 30,
@@ -182,7 +215,7 @@ row = 3,
 padx = 30,
 pady = 30)
 
-#Elementos de la pesta帽a 3
-ttk.Button(tab3,text='Iniciar adquisici贸n', command=plot).pack()
+#Elementos de la pesta馻 3
+ttk.Button(tab3,text='Iniciar adquisici髇', command=plot).pack()
 
 root.mainloop()
