@@ -62,7 +62,7 @@ def plot():
     plot1 = fig.add_subplot(111)
 
 	# plotting the graph
-    plot1.plot(ldatos,ltiempos)
+    plot1.plot(ltiempos,ldatos)
 
 	#Canvas que contiene la figura
     canvas = FigureCanvasTkAgg(fig,

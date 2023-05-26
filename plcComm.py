@@ -22,7 +22,7 @@ class plcComm:
         try:
             result = plc.db_read(dbNumber, startByte, byteSize)
             lecture=snap7.util.get_real(result,startByte)
-            return result,lecture #get raw data and value on readable format
+            return lecture #get raw data and value on readable format
         except Exception as err:
             print("Lectura no ejecutada")
             print(err)
@@ -32,7 +32,7 @@ class plcComm:
         dbNumber=1
         startByte=0 #byte from which to start reading
         try:
-            result = self.read_from_db()[0] #read value to change it
+            result = self.read_from_db() #read value to change it
             snap7.util.set_real(result,startByte,newValue)
             plc.db_write(dbNumber,startByte,result)
             print("Escritura ejecutada")
