@@ -7,9 +7,10 @@ NavigationToolbar2Tk)
 import time
 import pandas as pd
 from tkinter import filedialog
+import plcComm as pc
     
 
-plc=plcComm() #communications with plc instance
+plc=pc.plcComm() #communications with plc instance
 
         
 def set_pid():
