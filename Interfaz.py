@@ -34,20 +34,24 @@ def set_IP(): #Función para establecer conexión con el PLC
 
 def updateLevel():
     list_variables=["nivel1high","nivel1low","nivel2"] #list to store name of vars to read on db1 on plc
-    ltiempos=[] #dict to store times of readings
-    ldatos={i:0 for i in list_variables} #dict to store data of readings
-    cont=0 #counter for while cycle
+    ldatos={i:False for i in list_variables} #dict to store data of readings
     flag=True
     while flag:
         # db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tamaño)
         # data = snap7.util.get_real(db, 0)
         for i in list_variables:
-            data=plc.read_from_db(i)   #Lectura de datos del PLC
+            data=plc.read_from_db(i) #Lectura de datos del PLC
             #data=cont
             ldatos[i]=data #Datos adquiridos
             print(ldatos)
-        time.sleep(0.01) #Tiemo de espera en segundos
-    pass
+        time.sleep(0.1) #Tiemo de espera en segundos
+        if ldatos["nivel1high"]==True and ldatos["nivel1low"]==True:
+            levelTank1=100
+        elif ldatos["nivel1high"]==False and ldatos["nivel1low"]==True:
+            levelTank1=50
+        else:
+            levelTank1=0
+        return(levelTank1,ldatos["nivel2"])
 
 #Función para realizar adquisición de datos
 def plot():
@@ -178,21 +182,25 @@ row = 0,
 padx = 30,
 pady = 30)
 
+global Tank1
 Tank1 = ttk.Progressbar(tab1,orient=tk.VERTICAL, length=100,mode="determinate")
 Tank1.grid(column = 1,
 row = 1,
 padx = 30,
 pady = 30)
 
-def upBar():
-    Tank1['value']+=10
-    Tank2['value']+=10
+#return updated levels
+leveltank1, leveltank2=updateLevel()
+
+def upBar(level1,level2):
+    Tank1['value']=level1
+    Tank2['value']=level2
 
 def dBar():
-    Tank1['value']-=10
-    Tank2['value']-=10
+    Tank1['value']=10
+    Tank2['value']=10
 
-ttk.Button(tab1,text='Subir', command=upBar).grid(column = 2,
+ttk.Button(tab1,text='Subir', command=upBar(leveltank1,leveltank2)).grid(column = 2,
 row = 0,
 padx = 30,
 pady = 30)
