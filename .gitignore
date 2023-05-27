@@ -1,2 +1,3 @@
 *.orig
+*.csv
 __pycache__/

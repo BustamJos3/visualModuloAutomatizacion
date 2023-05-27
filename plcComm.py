@@ -12,17 +12,26 @@ class plcComm:
             client.connect(ip_direction, 0, 1)#make connection: rack 0, slot 1 as default
             return client
         except Exception as err:
-            print("Conexión no lograda")
+            print("ConexiÃ³n no lograda")
             print(err)
             return(str(err))
 
 
     
-    def read_from_db(self):
+    def read_from_db(self,which):
         #plc=self.connection() #connect to plc
         dbNumber=1
-        startByte=0 #byte from which to start reading
-        byteSize=4 #size of value to be read
+        byteSize=16
+        if which.lower() in "nivel1":
+            startByte=0 #byte from which to start reading
+        elif which.lower() in "nivel2":
+            startByte=4 #byte from which to start reading
+        elif which.lower() in "cte1":
+            startByte=8 #byte from which to start reading
+        elif which.lower() in "cte2":
+            startByte=12 #byte from which to start reading
+        elif which.lower() in "cte3":
+            startByte=16 #byte from which to start reading
         try:
            #result = plc.db_read(dbNumber, startByte, byteSize)
             result=client.db_read(dbNumber, startByte, byteSize)
@@ -43,18 +52,3 @@ class plcComm:
         except Exception as err:
             print("Escritura no ejecutada")
             print(err)
-
-    '''
-    def plotting_level(self,flag=True):
-        if flag==True:
-            plc=self.connection()
-            try:
-                fig,ax=plt.subplots(11) #create plot object
-                ax.plot()
-            except Exception as err:
-                print("Graficación no realizada")
-                print(err)
-        else:
-            print("Graficación terminada")
-    #unused for now
-    '''
