@@ -17,19 +17,19 @@ def set_pid():
 
 def set_IP(): #Función para establecer conexión con el PLC
     
-    try: 
-        plc.connection(ip_direction=str(IP.get()))
-        Estado=ttk.Label(tab0,text="Conectado a: "+str(IP.get()))
+    connection=plc.connection(ip_direction=str(IP.get()))
+    Estado=ttk.Label(tab0,text="Conectado a: "+str(IP.get()))
+    Estado.grid(column = 1,
+    row = 1,
+    padx = 30,
+    pady = 30)
+    if ("b' TCP : Invalid address'" in str(connection)):
+        Estado=ttk.Label(tab0,text="Dirección inválida")
         Estado.grid(column = 1,
         row = 1,
         padx = 30,
         pady = 30)
-    except Exception as err:
-        Estado=ttk.Label(tab0,text=str(err))
-        Estado.grid(column = 1,
-        row = 1,
-        padx = 30,
-        pady = 30)
+            
     return
 
 #Función para realizar adquisición de datos
