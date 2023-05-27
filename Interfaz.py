@@ -32,9 +32,26 @@ def set_IP(): #Función para establecer conexión con el PLC
             
     return
 
+def updateLevel():
+    list_variables=["nivel1high","nivel1low","nivel2"] #list to store name of vars to read on db1 on plc
+    ltiempos=[] #dict to store times of readings
+    ldatos={i:0 for i in list_variables} #dict to store data of readings
+    cont=0 #counter for while cycle
+    flag=True
+    while flag:
+        # db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tamaño)
+        # data = snap7.util.get_real(db, 0)
+        for i in list_variables:
+            data=plc.read_from_db(i)   #Lectura de datos del PLC
+            #data=cont
+            ldatos[i]=data #Datos adquiridos
+            print(ldatos)
+        time.sleep(0.01) #Tiemo de espera en segundos
+    pass
+
 #Función para realizar adquisición de datos
 def plot():
-    list_variables=["nivel1","nivel2"] #list to store name of vars to read on db1 on plc
+    list_variables=["nivel2"] #list to store name of vars to read on db1 on plc
     ltiempos=[] #dict to store times of readings
     ldatos={i:[] for i in list_variables} #dict to store data of readings
     cont=0 #counter for while cycle
@@ -54,10 +71,8 @@ def plot():
         cont=cont+1
 
 	#Figura que contiene la gráfica
-    fig,(ax1,ax2)=plt.subplots(2,1)
-    for i,j in zip((ax1,ax2),list_variables):
-        #ltiempos,
-        i.plot(ldatos[j]) #plot with respect to time, each variable
+    fig,ax1=plt.subplots(1,1)
+    ax1.plot(ltiempos,ldatos["nivel2"]) #plot with respect to time, each variable
 
     #fig = Figure(figsize = (5, 5),
 				#dpi = 100)

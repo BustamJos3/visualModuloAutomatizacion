@@ -18,15 +18,33 @@ class plcComm:
 
 
     
-    def read_from_db(self):
+    def read_from_db(self,which):
         #plc=self.connection() #connect to plc
+        who=which.lower()
         dbNumber=1
-        startByte=0 #byte from which to start reading
-        byteSize=4 #size of value to be read
+        initialByte=0
+        byteSize=17
+        if who in "nivel1high":
+            startByte=0 #byte from which to start reading
+            boolIndex=0 #bit occupied by such bool
+        elif who in "nivel1low":
+            startByte=0 #byte from which to start reading
+            boolIndex=1 #bit occupied by such bool
+        elif who in "nivel2":
+            startByte=2 #byte from which to start reading
+        elif who in "cte1":
+            startByte=6 #byte from which to start reading
+        elif who in "cte2":
+            startByte=10 #byte from which to start reading
+        elif who in "cte3":
+            startByte=14 #byte from which to start reading
         try:
            #result = plc.db_read(dbNumber, startByte, byteSize)
-            result=client.db_read(dbNumber, startByte, byteSize)
-            lecture=snap7.util.get_real(result,startByte)
+            result=client.db_read(dbNumber, initialByte, byteSize)
+            if which in "nivel1high" or which in "nivel1low":
+                lecture=snap7.util.get_bool(result,startByte,boolIndex)    
+            else:
+                lecture=snap7.util.get_real(result,startByte)
             return lecture #get raw data and value on readable format
         except Exception as err:
             print("Lectura no ejecutada")
@@ -43,18 +61,3 @@ class plcComm:
         except Exception as err:
             print("Escritura no ejecutada")
             print(err)
-
-    '''
-    def plotting_level(self,flag=True):
-        if flag==True:
-            plc=self.connection()
-            try:
-                fig,ax=plt.subplots(11) #create plot object
-                ax.plot()
-            except Exception as err:
-                print("Graficación no realizada")
-                print(err)
-        else:
-            print("Graficación terminada")
-    #unused for now
-    '''
