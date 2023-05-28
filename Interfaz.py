@@ -9,7 +9,7 @@ import pandas as pd
 from tkinter import filedialog
 import plcComm as pc
 import threading
-
+import keyboard
 
 plc=pc.plcComm() #communications with plc instance
 
@@ -35,8 +35,9 @@ def set_IP(): #Función para establecer conexión con el PLC
     return
 
 def updateLevel():
-    if tabControl.index('current')==1:
+    while (tabControl.index('current')==1) and (not keyboard.is_pressed('q')):
         try:
+            visual["state"] = "disabled"
             list_variables=["nivel1high","nivel1low","nivel2"] #list to store name of vars to read on db1 on plc
             ldatos={i:False for i in list_variables} #dict to store data of readings
             # db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tamaño)
@@ -55,8 +56,10 @@ def updateLevel():
                 Tank1['value']=0
             Tank2['value']=ldatos['nivel2']*10
             root.update_idletasks()
-            root.after(2000, updateLevel())
+            visual["state"] = "normal"
         except:
+            visual["state"] = "normal"
+            break
             return
 
         
@@ -208,15 +211,12 @@ def dBar():
     Tank1['value']=10
     Tank2['value']=10
 
-ttk.Button(tab1,text='Subir', command=updateLevel).grid(column = 2,
+visual=ttk.Button(tab1,text='Visualizar', command=updateLevel)
+visual.grid(column = 2,
 row = 0,
 padx = 30,
 pady = 30)
 
-ttk.Button(tab1,text='Bajar', command=dBar).grid(column = 3,
-row = 0,
-padx = 30,
-pady = 30)
 
 #Elementos de la pestaña 2
 ttk.Label(tab2,text="kp: ").grid(column = 0,
