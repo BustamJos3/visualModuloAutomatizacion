@@ -8,6 +8,8 @@ import time
 import pandas as pd
 from tkinter import filedialog
 import plcComm as pc
+import threading
+
 
 plc=pc.plcComm() #communications with plc instance
 
@@ -32,35 +34,67 @@ def set_IP(): #Función para establecer conexión con el PLC
             
     return
 
+def updateLevel():
+    if tabControl.index('current')==1:
+        try:
+            list_variables=["nivel1high","nivel1low","nivel2"] #list to store name of vars to read on db1 on plc
+            ldatos={i:False for i in list_variables} #dict to store data of readings
+            # db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tamaño)
+            # data = snap7.util.get_real(db, 0)
+            for i in list_variables:
+                data=plc.read_from_db(i) #Lectura de datos del PLC
+                #data=cont
+                ldatos[i]=data #Datos adquiridos
+                print(ldatos)
+            time.sleep(0.3) #Tiemo de espera en segundos
+            if ldatos["nivel1high"]==True and ldatos["nivel1low"]==True:
+                Tank1['value']=100
+            elif ldatos["nivel1high"]==False and ldatos["nivel1low"]==True:
+                Tank1['value']=50
+            else:
+                Tank1['value']=0
+            Tank2['value']=ldatos['nivel2']*10
+            root.update_idletasks()
+            root.after(2000, updateLevel())
+        except:
+            return
+
+        
+# 192.168.0.2
+
 #Función para realizar adquisición de datos
 def plot():
-    cont=0
-    ltiempos=[]
-    ldatos=[]
-
+    list_variables=["nivel2"] #list to store name of vars to read on db1 on plc
+    ltiempos=[] #dict to store times of readings
+    ldatos={i:[] for i in list_variables} #dict to store data of readings
+    cont=0 #counter for while cycle
     while cont<=10:
         
         # db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tamaño)
         # data = snap7.util.get_real(db, 0)
-        data=plc.read_from_db()   #Lectura de datos del PLC
-        #data=cont
+        for i in list_variables:
+            data=plc.read_from_db(i)   #Lectura de datos del PLC
+            #data=cont
+            ldatos[i].append(data) #Datos adquiridos
+            print(data)
         tiempo=time.ctime() #Tiempo en que se toma la medición
-        ldatos.append(data) #Datos adquiridos
         ltiempos.append(tiempo)
-        print(data)
         print(tiempo)
         time.sleep(1) #Tiemo de espera en segundos
         cont=cont+1
 
 	#Figura que contiene la gráfica
-    fig = Figure(figsize = (5, 5),
-				dpi = 100)
+    fig,ax1=plt.subplots(1,1)
+    ax1.plot(ltiempos,ldatos["nivel2"]) #plot with respect to time, each variable
+
+    #fig = Figure(figsize = (5, 5),
+				#dpi = 100)
     
     
-    plot1 = fig.add_subplot(111)
+    #plot1 = fig.add_subplot(111)
 
 	# plotting the graph
-    plot1.plot(ldatos,ltiempos)
+    #plot1.plot(ltiempos,ldatos)
 
 	#Canvas que contiene la figura
     canvas = FigureCanvasTkAgg(fig,
@@ -80,15 +114,17 @@ def plot():
 
      
     #Diccionario de listas
-    dict1 = {'Datos': ldatos, 'Tiempo': ltiempos}  
-       
-    df = pd.DataFrame(dict1) 
+    dict1 = {'Tiempo': ltiempos}
+    for i in list_variables:
+        dict1[i]=ldatos[i]
+    df = pd.DataFrame(dict1)
     
     #Guardado del archivo de datos 
-    df.to_csv('Datos_PLC.csv')
+    df.to_csv(f'Datos_PLC_nivel.csv')
     
     root.filename =  filedialog.asksaveasfilename(initialdir = "/",title = 'Seleccione la ubicación de destino',filetypes = (("CSV","csv"),("excel","xlsx"),("all files","*.*")))
-    df.to_csv(root.filename+'.csv',index=False)
+    df.to_csv(root.filename+'.csv',index=False) #prompt wimdow to store file
+    root.update_idletasks()
     
 
 
@@ -155,21 +191,24 @@ row = 0,
 padx = 30,
 pady = 30)
 
+global Tank1
 Tank1 = ttk.Progressbar(tab1,orient=tk.VERTICAL, length=100,mode="determinate")
 Tank1.grid(column = 1,
 row = 1,
 padx = 30,
 pady = 30)
 
-def upBar():
-    Tank1['value']+=10
-    Tank2['value']+=10
+
+
+def upBar(level1=0,level2=0):
+    Tank1['value']=level1
+    Tank2['value']=level2
 
 def dBar():
-    Tank1['value']-=10
-    Tank2['value']-=10
+    Tank1['value']=10
+    Tank2['value']=10
 
-ttk.Button(tab1,text='Subir', command=upBar).grid(column = 2,
+ttk.Button(tab1,text='Subir', command=updateLevel).grid(column = 2,
 row = 0,
 padx = 30,
 pady = 30)
