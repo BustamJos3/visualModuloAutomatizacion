@@ -8,6 +8,8 @@ import time
 import pandas as pd
 from tkinter import filedialog
 import plcComm as pc
+import threading
+
 
 plc=pc.plcComm() #communications with plc instance
 
@@ -33,25 +35,32 @@ def set_IP(): #Función para establecer conexión con el PLC
     return
 
 def updateLevel():
-    list_variables=["nivel1high","nivel1low","nivel2"] #list to store name of vars to read on db1 on plc
-    ldatos={i:False for i in list_variables} #dict to store data of readings
-    flag=True
-    while flag:
-        # db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tamaño)
-        # data = snap7.util.get_real(db, 0)
-        for i in list_variables:
-            data=plc.read_from_db(i) #Lectura de datos del PLC
-            #data=cont
-            ldatos[i]=data #Datos adquiridos
-            print(ldatos)
-        time.sleep(0.1) #Tiemo de espera en segundos
-        if ldatos["nivel1high"]==True and ldatos["nivel1low"]==True:
-            levelTank1=100
-        elif ldatos["nivel1high"]==False and ldatos["nivel1low"]==True:
-            levelTank1=50
-        else:
-            levelTank1=0
-        return(levelTank1,ldatos["nivel2"])
+    if tabControl.index('current')==1:
+        try:
+            list_variables=["nivel1high","nivel1low","nivel2"] #list to store name of vars to read on db1 on plc
+            ldatos={i:False for i in list_variables} #dict to store data of readings
+            # db = plc.db_read(5, 0, 4) #(DB,Inicio (byte),Tamaño)
+            # data = snap7.util.get_real(db, 0)
+            for i in list_variables:
+                data=plc.read_from_db(i) #Lectura de datos del PLC
+                #data=cont
+                ldatos[i]=data #Datos adquiridos
+                print(ldatos)
+            time.sleep(0.3) #Tiemo de espera en segundos
+            if ldatos["nivel1high"]==True and ldatos["nivel1low"]==True:
+                Tank1['value']=100
+            elif ldatos["nivel1high"]==False and ldatos["nivel1low"]==True:
+                Tank1['value']=50
+            else:
+                Tank1['value']=0
+            Tank2['value']=ldatos['nivel2']*10
+            root.update_idletasks()
+            root.after(2000, updateLevel())
+        except:
+            return
+
+        
+# 192.168.0.2
 
 #Función para realizar adquisición de datos
 def plot():
@@ -115,7 +124,7 @@ def plot():
     
     root.filename =  filedialog.asksaveasfilename(initialdir = "/",title = 'Seleccione la ubicación de destino',filetypes = (("CSV","csv"),("excel","xlsx"),("all files","*.*")))
     df.to_csv(root.filename+'.csv',index=False) #prompt wimdow to store file
-    fig.clf()#clear figure
+    root.update_idletasks()
     
 
 
@@ -189,10 +198,9 @@ row = 1,
 padx = 30,
 pady = 30)
 
-#return updated levels
-leveltank1, leveltank2=updateLevel()
 
-def upBar(level1,level2):
+
+def upBar(level1=0,level2=0):
     Tank1['value']=level1
     Tank2['value']=level2
 
@@ -200,7 +208,7 @@ def dBar():
     Tank1['value']=10
     Tank2['value']=10
 
-ttk.Button(tab1,text='Subir', command=upBar(leveltank1,leveltank2)).grid(column = 2,
+ttk.Button(tab1,text='Subir', command=updateLevel).grid(column = 2,
 row = 0,
 padx = 30,
 pady = 30)
