@@ -25,13 +25,15 @@ def set_IP(): #Función para establecer conexión con el PLC
     row = 1,
     padx = 30,
     pady = 30)
-    if ("b' TCP : Invalid address'" in str(connection)):
+    tabControl.tab(1, state="normal")
+    tabControl.tab(2, state="normal")
+    tabControl.tab(3, state="normal")
+    if ("b' " in str(connection)):
         Estado=ttk.Label(tab0,text="Dirección inválida")
         Estado.grid(column = 1,
         row = 1,
         padx = 30,
-        pady = 30)
-            
+        pady = 30)       
     return
 
 def updateLevel():
@@ -80,7 +82,7 @@ def plot():
             #data=cont
             ldatos[i].append(data) #Datos adquiridos
             print(data)
-        tiempo=time.ctime() #Tiempo en que se toma la medición
+        tiempo=time.strftime("%H:%M:%S", time.gmtime()) #Tiempo en que se toma la medición
         ltiempos.append(tiempo)
         print(tiempo)
         time.sleep(1) #Tiemo de espera en segundos
@@ -89,15 +91,9 @@ def plot():
 	#Figura que contiene la gráfica
     fig,ax1=plt.subplots(1,1)
     ax1.plot(ltiempos,ldatos["nivel2"]) #plot with respect to time, each variable
+    plt.xticks(rotation = 45)
+    plt.tight_layout()
 
-    #fig = Figure(figsize = (5, 5),
-				#dpi = 100)
-    
-    
-    #plot1 = fig.add_subplot(111)
-
-	# plotting the graph
-    #plot1.plot(ltiempos,ldatos)
 
 	#Canvas que contiene la figura
     canvas = FigureCanvasTkAgg(fig,
@@ -130,11 +126,10 @@ def plot():
     root.update_idletasks()
     
 
-
 root = tk.Tk()
 root.title("SCADA Banco de instrumentación")
 tabControl = ttk.Notebook(root)
-tabControl.config(width=400, height=300)
+tabControl.config(width=400, height=400)
 
 s = ttk.Style()
 s.theme_use('default')
@@ -153,6 +148,10 @@ tabControl.add(tab1, text ='Visualización')
 tabControl.add(tab2, text ='Control PID')
 tabControl.add(tab3, text ='Adquisición')
 tabControl.pack(expand = 1, fill ="both")
+
+#tabControl.tab(1, state="disabled")
+#tabControl.tab(2, state="disabled")
+#tabControl.tab(3, state="disabled")
 
 #Elementos de la pestaña 0
 ttk.Label(tab0,text="Dirección IP: ").grid(column = 0,
@@ -201,19 +200,14 @@ row = 1,
 padx = 30,
 pady = 30)
 
-
-
-def upBar(level1=0,level2=0):
-    Tank1['value']=level1
-    Tank2['value']=level2
-
-def dBar():
-    Tank1['value']=10
-    Tank2['value']=10
-
 visual=ttk.Button(tab1,text='Visualizar', command=updateLevel)
 visual.grid(column = 2,
 row = 0,
+padx = 30,
+pady = 30)
+
+ttk.Label(tab1,text="Oprima 'Q' para detener").grid(column = 2,
+row = 1,
 padx = 30,
 pady = 30)
 
@@ -249,12 +243,21 @@ row = 2,
 padx = 30,
 pady = 30)
 
-ttk.Button(tab2,text='Enviar', command=set_pid).grid(column = 0,
+ttk.Label(tab2,text="Set point: ").grid(column = 0,
 row = 3,
+padx = 30,
+pady = 30)
+
+setp=ttk.Entry(tab2).grid(column = 1,
+row = 3,
+padx = 30,
+pady = 30)
+
+ttk.Button(tab2,text='Enviar a PLC', command=set_pid).grid(column = 0,
+row = 4,
 padx = 30,
 pady = 30)
 
 #Elementos de la pestaña 3
 ttk.Button(tab3,text='Iniciar adquisición', command=plot).pack()
-
 root.mainloop()
